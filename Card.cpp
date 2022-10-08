@@ -5,6 +5,7 @@
 #include <string>
 #include "Card.h"
 using namespace std;
+
 // add any necessary #include or using directives here
 
 // rank and suit names -- do not remove these
@@ -49,7 +50,8 @@ string Card::get_suit() const{
 }
 
 string Card::get_suit(const string &trump) const{
-    if(Card(suit, rank).is_left_bower(trump)){ //is_left_bower
+    Card lbower = Card("Jack", Suit_next(trump));
+    if(lbower == Card(suit, rank)){ //instead of creating a new card, how do you access the card? this.card
         return trump;
     }
     return suit;
@@ -63,7 +65,7 @@ bool Card::is_face_or_ace() const{
     return false;
 }
 bool Card::is_right_bower(const string &trump) const{
-    return Card(rank, suit).is_trump(trump);
+    return Card("Jack", trump) == Card(rank, suit);
 }
 bool Card::is_left_bower(const string &trump) const{
     return Card("Jack", Suit_next(trump)) == Card(rank, suit);
@@ -75,37 +77,102 @@ bool Card::is_trump(const string &trump) const{
 //EFFECTS Returns true if lhs is lower value than rhs.
 //  Does not consider trump.
 bool operator<(const Card &lhs, const Card &rhs){
-    return Card_num_val_rml(lhs, rhs) > 0;
+    double ranknuml = 9.0;
+    if(lhs.get_rank().compare(Card::RANK_ACE)==0){
+        ranknuml = 14;
+    }
+    if(lhs.get_rank().compare(Card::RANK_KING)==0){
+        ranknuml = 13;
+    }
+    if(lhs.get_rank().compare(Card::RANK_QUEEN)==0){
+        ranknuml = 12;
+    }
+    if(lhs.get_rank().compare(Card::RANK_JACK)==0){
+        ranknuml = 11;
+    }
+    if(lhs.get_rank().compare(Card::RANK_TEN)==0){
+        ranknuml = 10;
+    }
+
+    if(lhs.get_suit().compare(Card::SUIT_SPADES) == 0){
+        ranknuml +=0.1;
+    }
+    if(lhs.get_suit().compare(Card::SUIT_HEARTS) == 0){
+        ranknuml +=0.2;
+    }
+    if(lhs.get_suit().compare(Card::SUIT_CLUBS) == 0){
+        ranknuml +=0.3;
+    }
+    if(lhs.get_suit().compare(Card::SUIT_DIAMONDS) == 0){
+        ranknuml +=0.4;
+    }
+
+    double ranknumr = 9.0;
+    if(rhs.get_rank().compare(Card::RANK_ACE)==0){
+        ranknumr = 14;
+    }
+    if(rhs.get_rank().compare(Card::RANK_KING)==0){
+        ranknumr = 13;
+    }
+    if(rhs.get_rank().compare(Card::RANK_QUEEN)==0){
+        ranknumr = 12;
+    }
+    if(rhs.get_rank().compare(Card::RANK_JACK)==0){
+        ranknumr = 11;
+    }
+    if(rhs.get_rank().compare(Card::RANK_TEN)==0){
+        ranknumr = 10;
+    }
+
+    if(rhs.get_suit().compare(Card::SUIT_SPADES) == 0){
+        ranknumr +=0.1;
+    }
+    if(rhs.get_suit().compare(Card::SUIT_HEARTS) == 0){
+        ranknumr +=0.2;
+    }
+    if(rhs.get_suit().compare(Card::SUIT_CLUBS) == 0){
+        ranknumr +=0.3;
+    }
+    if(rhs.get_suit().compare(Card::SUIT_DIAMONDS) == 0){ //test case suit different
+        ranknumr +=0.4;
+    }
+
+    return( ranknuml < ranknumr );
 }
 
 //EFFECTS Returns true if lhs is lower value than rhs or the same card as rhs.
 //  Does not consider trump.
 bool operator<=(const Card &lhs, const Card &rhs){
-    return Card_num_val_rml(lhs, rhs) >= 0;
+    return lhs < rhs || lhs == rhs;
 }
 
 //EFFECTS Returns true if lhs is higher value than rhs.
 //  Does not consider trump.
 bool operator>(const Card &lhs, const Card &rhs){
-    return  Card_num_val_rml(lhs, rhs) < 0;
+    return !(lhs <= rhs);
 }
 
 //EFFECTS Returns true if lhs is higher value than rhs or the same card as rhs.
 //  Does not consider trump.
 bool operator>=(const Card &lhs, const Card &rhs) {
-    return Card_num_val_rml(lhs, rhs) <= 0; //returns pos if r>l
+    return !(lhs < rhs);
 }
 
 //EFFECTS Returns true if lhs is same card as rhs.
 //  Does not consider trump.
 bool operator==(const Card &lhs, const Card &rhs) {
-    return Card_num_val_rml(lhs, rhs) == 0;
+    if (lhs.get_rank().compare(rhs.get_rank())==0) {
+        if (lhs.get_suit().compare(rhs.get_suit())==0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 //EFFECTS Returns true if lhs is not the same card as rhs.
 //  Does not consider trump.
 bool operator!=(const Card &lhs, const Card &rhs) {
-    return Card_num_val_rml(lhs, rhs) != 0;
+    return !(lhs == rhs);
 }
 
 //REQUIRES suit is a valid suit
@@ -183,67 +250,4 @@ bool Card_less(const Card &a, const Card &b, const Card &led_card,
         return true;
     }
     return a<b;
-}
-
-double Card_num_val_rml(const Card &lhs, const Card &rhs){
-    double ranknuml = 9.0;
-    if(lhs.get_rank().compare(Card::RANK_ACE)==0){
-        ranknuml = 14;
-    }
-    if(lhs.get_rank().compare(Card::RANK_KING)==0){
-        ranknuml = 13;
-    }
-    if(lhs.get_rank().compare(Card::RANK_QUEEN)==0){
-        ranknuml = 12;
-    }
-    if(lhs.get_rank().compare(Card::RANK_JACK)==0){
-        ranknuml = 11;
-    }
-    if(lhs.get_rank().compare(Card::RANK_TEN)==0){
-        ranknuml = 10;
-    }
-
-    if(lhs.get_suit().compare(Card::SUIT_SPADES) == 0){
-        ranknuml +=0.1;
-    }
-    if(lhs.get_suit().compare(Card::SUIT_HEARTS) == 0){
-        ranknuml +=0.2;
-    }
-    if(lhs.get_suit().compare(Card::SUIT_CLUBS) == 0){
-        ranknuml +=0.3;
-    }
-    if(lhs.get_suit().compare(Card::SUIT_DIAMONDS) == 0){
-        ranknuml +=0.4;
-    }
-
-    double ranknumr = 9.0;
-    if(rhs.get_rank().compare(Card::RANK_ACE)==0){
-        ranknumr = 14;
-    }
-    if(rhs.get_rank().compare(Card::RANK_KING)==0){
-        ranknumr = 13;
-    }
-    if(rhs.get_rank().compare(Card::RANK_QUEEN)==0){
-        ranknumr = 12;
-    }
-    if(rhs.get_rank().compare(Card::RANK_JACK)==0){
-        ranknumr = 11;
-    }
-    if(rhs.get_rank().compare(Card::RANK_TEN)==0){
-        ranknumr = 10;
-    }
-    
-    if(rhs.get_suit().compare(Card::SUIT_SPADES) == 0){
-        ranknumr +=0.1;
-    }
-    if(rhs.get_suit().compare(Card::SUIT_HEARTS) == 0){
-        ranknumr +=0.2;
-    }
-    if(rhs.get_suit().compare(Card::SUIT_CLUBS) == 0){
-        ranknumr +=0.3;
-    }
-    if(rhs.get_suit().compare(Card::SUIT_DIAMONDS) == 0){ //test case suit different
-        ranknumr +=0.4;
-    }
-    return ranknumr - ranknuml;
 }
