@@ -46,7 +46,17 @@ using namespace std;
   // MODIFIES: pack_input
   // EFFECTS: Initializes Pack by reading from pack_input.
   Pack::Pack(std::istream& pack_input){
-    
+    for(int i = 0; i < PACK_SIZE; i++) {
+      std::string rankI;
+      pack_input >> rankI;
+      std::string middle;
+      pack_input >> middle;
+      std::string suitI;
+      pack_input >> suitI;
+      cards[i] = Card(rankI, suitI);
+    }
+
+    next = 0;
   }
 
   // REQUIRES: cards remain in the Pack
@@ -65,14 +75,21 @@ using namespace std;
   //          performs an in shuffle seven times. See
   //          https://en.wikipedia.org/wiki/In_shuffle.
   void Pack::shuffle(){
-    for( 7 times ){
-      cards1<> = first half cards
-      cards2<> = second half cards
-      cardsf<> = empty of PACK_SIZE
-      counter = 0;
-      for(i -> pack_size i+2){
-        cardsf <i> = cards1<counter>
-        cardsf <i+1> = cards2<counter
+    for(int i=0; i<7; i++){ //iterates 7 times
+      std::array<Card, PACK_SIZE/2> cards1;
+      for(int j=0; j<PACK_SIZE/2; j++){
+        cards1[i] = cards[i];
+      }
+      std::array<Card, PACK_SIZE/2> cards2;
+      for(int j=0; j<PACK_SIZE/2; j++){
+        cards2[j] = cards[j+PACK_SIZE/2];
+      }
+      std::array<Card, PACK_SIZE> cardsf;
+      int counter = 0;
+      for(int k=0; k<PACK_SIZE-1; k+=2){
+        cardsf[k] = cards1[counter];
+        cardsf[k+1] = cards2[counter];
+        counter ++;
       }
       cards = cardsf;
     }
@@ -80,5 +97,5 @@ using namespace std;
 
   // EFFECTS: returns true if there are no more cards left in the pack
   bool Pack::empty() const{
-    return   PACK_SIZE - next == 1;
+    return PACK_SIZE - next == 1;
   }
