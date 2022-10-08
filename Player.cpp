@@ -81,40 +81,76 @@ class SimplePlayer: public Player{
     //  "Lead" means to play the first Card in a trick.  The card
     //  is removed the player's hand.
     Card lead_card(const std::string &trump){
-        int min_index;
+        int max_index;
         int trump_counter = 0;
         for(int i=0; i<cardsp.size(); i++){
             if(cardsp[i].get_suit(trump) == trump){
                 trump_counter ++;
             }
             if(cardsp[i].get_suit(trump) != trump){
-                min_index = i;
+                max_index = i;
             }
         }
         int max_index = 0;
         for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i] > cardsp[max_index]){
+            if(Card_less(cardsp[i], cardsp[max_index], trump)){
                 max_index = i;
             }
         }
         if(trump_counter == MAX_HAND_SIZE){
-            return cardsp[max_index];
+            Card tempcard = cardsp[max_index];
+            cardsp.erase(cardsp.begin() + max_index);
+            return tempcard;
         }
-
         
         for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i] < cardsp[max_index] && cardsp[i].get_suit(trump) != trump){
-                min_index = i;
+            if(cardsp[i] > cardsp[max_index] && cardsp[i].get_suit(trump) != trump){
+                max_index = i;
             }
         }
-        return cardsp[min_index];
+        Card tempcard = cardsp[max_index];
+        cardsp.erase(cardsp.begin() + max_index);
+        return tempcard;
     }
 
     //REQUIRES Player has at least one card, trump is a valid suit
     //EFFECTS  Plays one Card from Player's hand according to their strategy.
     //  The card is removed from the player's hand.
     Card play_card(const Card &led_card, const std::string &trump){
-        
+        int followIndex = 0;
+        int lowIndex = 0;
+        int countLed = 0;
+        for (int i = 0; i < cardsp.size(); i++) {
+            if (cardsp[i].get_suit(trump) == led_card.get_suit(trump)) {
+                countLed++;
+                followIndex = i;
+            }
+            if (Card_less(cardsp[i], cardsp[lowIndex], led_card, trump)) {
+                lowIndex = i;
+            }
+        }
+        if (countLed == 0) {
+            Card tempcard = cardsp[lowIndex];
+            cardsp.erase(cardsp.begin() + lowIndex);
+            return tempcard;
+        }
+        else if (countLed == 1) {
+            Card tempcard = cardsp[followIndex];
+            cardsp.erase(cardsp.begin() + followIndex);
+            return tempcard;
+        }
+        else {
+            for (int j = 0; j < cardsp.size(); j++) {
+                if (cardsp[j].get_suit(trump) == led_card.get_suit(trump)) {
+                    if (Card_less(cardsp[followIndex], cardsp[j], trump)) {
+                        followIndex = j;
+                    }
+                }
+            }
+            Card tempcard = cardsp[followIndex];
+            cardsp.erase(cardsp.begin() + followIndex);
+            return tempcard;
+        }
     }
 
     // Maximum number of cards in a player's hand
