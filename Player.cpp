@@ -15,6 +15,8 @@ class SimplePlayer: public Player{
         vector<Card> cardsp;
     public: 
 
+    SimplePlayer(string name) : namep(name){};
+
     //EFFECTS returns player's name
     const std::string & get_name(){
         return namep;
@@ -167,10 +169,13 @@ class SimplePlayer: public Player{
         if(strategy == "Simple"){
             return new SimplePlayer(name);
         }
-        assert(false);
-        return nullptr;
     }
 
     //EFFECTS: Prints player's name to os
-    std::ostream & operator<<(std::ostream &os, const Player &p);
+    std::ostream & operator<<(std::ostream &os, const Player &p){
+        os << p.get_name() << endl;
+        return os;
+    }
+
+    
 }
