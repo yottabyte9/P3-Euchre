@@ -8,6 +8,7 @@ using namespace std;
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 class SimplePlayer: public Player{
     private:
@@ -17,26 +18,18 @@ class SimplePlayer: public Player{
 
     SimplePlayer(string name) : namep(name){};
 
-    //EFFECTS returns player's name
-    const std::string & get_name(){
+    const std::string & get_name() const{
         return namep;
     }
 
-    //REQUIRES player has less than MAX_HAND_SIZE cards
-    //EFFECTS  adds Card c to Player's hand
     void add_card(const Card &c){
         if(cardsp.size() < MAX_HAND_SIZE){
             cardsp.push_back(c);
         }
     }
 
-    //REQUIRES round is 1 or 2
-    //MODIFIES order_up_suit
-    //EFFECTS If Player wishes to order up a trump suit then return true and
-    //  change order_up_suit to desired suit.  If Player wishes to pass, then do
-    //  not modify order_up_suit and return false.
-    bool make_trump(const Card &upcard, bool is_dealer,
-                    int round, std::string &order_up_suit){
+    bool make_trump(const Card &upcard, bool is_dealer, int round, std::string &order_up_suit) const {
+
         int num_suit_hand = 0;
         for(int i=0; i<cardsp.size(); i++){
             if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit(upcard.get_suit()) == upcard.get_suit()){
@@ -65,8 +58,7 @@ class SimplePlayer: public Player{
         }
     }
 
-    //REQUIRES Player has at least one card
-    //EFFECTS  Player adds one card to hand and removes one card from hand.
+
     void add_and_discard(const Card &upcard){
         cardsp.push_back(upcard);
         int min_index = 0;
@@ -78,10 +70,6 @@ class SimplePlayer: public Player{
         cardsp.erase(cardsp.begin()+min_index);
     }
 
-    //REQUIRES Player has at least one card, trump is a valid suit
-    //EFFECTS  Leads one Card from Player's hand according to their strategy
-    //  "Lead" means to play the first Card in a trick.  The card
-    //  is removed the player's hand.
     Card lead_card(const std::string &trump){
         int max_index;
         int trump_counter = 0;
@@ -115,9 +103,6 @@ class SimplePlayer: public Player{
         return tempcard;
     }
 
-    //REQUIRES Player has at least one card, trump is a valid suit
-    //EFFECTS  Plays one Card from Player's hand according to their strategy.
-    //  The card is removed from the player's hand.
     Card play_card(const Card &led_card, const std::string &trump){
         int followIndex = 0;
         int lowIndex = 0;
@@ -155,27 +140,120 @@ class SimplePlayer: public Player{
         }
     }
 
-    // Maximum number of cards in a player's hand
     static const int MAX_HAND_SIZE = 5;
 
-    // Needed to avoid some compiler errors
-    virtual ~Player() {}
+    ~SimplePlayer() {}
 
-    //EFFECTS: Returns a pointer to a player with the given name and strategy
-    //To create an object that won't go out of scope when the function returns,
-    //use "return new Simple(name)" or "return new Human(name)"
-    //Don't forget to call "delete" on each Player* after the game is over
     Player * Player_factory(const std::string &name, const std::string &strategy){
         if(strategy == "Simple"){
             return new SimplePlayer(name);
         }
+        if(strategy == "Human"){
+            return new HumanPlayer(name);
+        }
+        assert(false);
+        return nullptr;
     }
 
-    //EFFECTS: Prints player's name to os
     std::ostream & operator<<(std::ostream &os, const Player &p){
         os << p.get_name() << endl;
         return os;
     }
 
-    
+    Card return_card(int index, SimplePlayer *a){
+        return a->cardsp[index];
+    }
+
+    class HumanPlayer: public Player{
+    private:
+        string nameh;
+        vector<Card> cardsh;
+    public:
+
+        HumanPlayer(string name) : nameh(name){};
+
+        virtual const std::string & get_name() const{
+            return nameh;
+        }
+
+        void add_card(const Card &c){
+            if(cardsh.size() < MAX_HAND_SIZE){
+                cardsh.push_back(c);
+            }
+        }
+
+        //REQUIRES round is 1 or 2
+        //MODIFIES order_up_suit
+        //EFFECTS If Player wishes to order up a trump suit then return true and
+        //  change order_up_suit to desired suit.  If Player wishes to pass, then do
+        //  not modify order_up_suit and return false.
+        bool make_trump(const Card &upcard, bool is_dealer,
+                                int round, std::string &order_up_suit) const{
+            print_hand();
+            cout << "Human player " << nameh << ", please enter a suit, or \"pass\":\n";
+            string suit_in;
+            cin >> suit_in;
+            if(suit_in != "pass"){
+                order_up_suit = suit_in;
+                return true;
+            }
+            return false;
+        }
+
+        void print_hand() const {
+            for (size_t i=0; i < cardsh.size(); ++i) {
+                cout << "Human player " << nameh << "'s hand: "
+                << "[" << i << "] " << cardsh[i] << "\n";
+            }
+        }
+
+        //REQUIRES Player has at least one card
+        //EFFECTS  Player adds one card to hand and removes one card from hand.
+        void add_and_discard(const Card &upcard){
+            print_hand();
+            cout << "Discard upcard: [-1]\n";
+            cout << "Human player " << nameh << ", please select a card to discard:\n";
+            int discard_num;
+            cin >> discard_num;
+            if(discard_num != -1){
+                cardsh.erase(cardsh.begin() + discard_num);
+                cardsh.push_back(upcard);
+                std::sort(cardsh.begin(), cardsh.end());
+            }
+            std::sort(cardsh.begin(), cardsh.end());
+        }
+
+        //REQUIRES Player has at least one card, trump is a valid suit
+        //EFFECTS  Leads one Card from Player's hand according to their strategy
+        //  "Lead" means to play the first Card in a trick.  The card
+        //  is removed the player's hand.
+        Card lead_card(const std::string &trump){
+            print_hand();
+            cout << "Human player " << nameh << ", please select a card:\n";
+            int play_num;
+            cin >> play_num;
+            Card tempcard = cardsh[play_num];
+            cardsh.erase(cardsh.begin() + play_num);
+            return tempcard;
+        }
+
+        //REQUIRES Player has at least one card, trump is a valid suit
+        //EFFECTS  Plays one Card from Player's hand according to their strategy.
+        //  The card is removed from the player's hand.
+        Card play_card(const Card &led_card, const std::string &trump){
+            lead_card(trump);
+        }
+
+        // Maximum number of cards in a player's hand
+        static const int MAX_HAND_SIZE = 5;
+
+        // Needed to avoid some compiler errors
+        ~HumanPlayer() {}
+
+        //EFFECTS: Prints player's name to os
+        std::ostream & operator<<(std::ostream &os, const Player &p){
+            os << p.get_name() << endl;
+            return os;
+        }
+    }
 }
