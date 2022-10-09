@@ -1,59 +1,66 @@
 // Project UID 1d9f47bfc76643019cfbf037641defe1
 
-#include <sstream>
+#include "Player.h"
 #include "unit_test_framework.h"
 #include "Card.h"
+#include "Pack.h"
+
+#include <iostream>
+#include <vector>
 
 using namespace std;
 
-// THESE TEST CASES WILL ONLY TELL YOU IF YOUR CODE COMPILES.
-// YOU NEED TO WRITE YOUR OWN COMPREHENSIVE TEST CASES IN Card_tests.cpp
+TEST(test_player_get_name) {
+    Player * alice = Player_factory("Alice", "Simple");
+    ASSERT_EQUAL("Alice", alice->get_name());
 
-TEST(test_card_suit_and_rank) {
-    Card two_spades = Card();
-    ASSERT_EQUAL(two_spades.get_rank(), Card::RANK_TWO);
-    ASSERT_EQUAL(two_spades.get_suit(), Card::SUIT_SPADES);
+    delete alice;
 
-    Card three_spades = Card(Card::RANK_THREE, Card::SUIT_SPADES);
-    ASSERT_EQUAL(three_spades.get_rank(), Card::RANK_THREE);
-    ASSERT_EQUAL(three_spades.get_suit(), Card::SUIT_SPADES);
-    ASSERT_EQUAL(three_spades.get_suit(Card::SUIT_CLUBS), Card::SUIT_SPADES);
+    Player * empty = Player_factory("", "Simple");
+    ASSERT_EQUAL("", empty->get_name());
+    delete empty;
 }
 
-TEST(test_card_type) {
-    Card three_spades = Card(Card::RANK_THREE, Card::SUIT_SPADES);
-    ASSERT_FALSE(three_spades.is_face_or_ace());
-    ASSERT_FALSE(three_spades.is_right_bower(Card::SUIT_CLUBS));
-    ASSERT_FALSE(three_spades.is_left_bower(Card::SUIT_CLUBS));
-    ASSERT_FALSE(three_spades.is_trump(Card::SUIT_CLUBS));
+TEST(test_add_card){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_JACK, Card::SUIT_CLUBS);
+    alice->add_card(c1);
+    ASSERT_EQUAL(return_card(0,alice), c1);
+    Card c2(Card::RANK_TEN, Card::SUIT_CLUBS);
+    alice->add_card(c2);
+    ASSERT_EQUAL(return_card(1,alice), c2);
+    alice->add_card(c2);
+    alice->add_card(c2);
+    alice->add_card(c1);
+    ASSERT_EQUAL(return_card(4,alice), c1);
+    delete alice;
 }
 
-TEST(test_card_self_comparison) {
-    Card three_spades = Card(Card::RANK_THREE, Card::SUIT_SPADES);
-    ASSERT_FALSE(three_spades < three_spades);
-    ASSERT_TRUE(three_spades <= three_spades);
-    ASSERT_FALSE(three_spades > three_spades);
-    ASSERT_TRUE(three_spades >= three_spades);
-    ASSERT_TRUE(three_spades == three_spades);
-    ASSERT_FALSE(three_spades != three_spades);
+TEST(test_make_trump){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup = Card::SUIT_DIAMONDS;
+    Card upcard1 = Card(Card::RANK_KING, CARD::SUIT_DIAMONDS);
+    Card upcard2 = Card(Card::RANK_TEN, CARD::SUIT_SPADES);
+
+    bool isDealer = false;
+    int round1 = 1;
+    int round2 = 2;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_TRUE(make_trump(upcard1, isdealer, round1, orderup));
+    ASSERT_TRUE(make_trump(upcard2, isdealer, round2, orderup));
 }
 
-TEST(test_Suit_next) {
-    ASSERT_EQUAL(Suit_next(Card::SUIT_CLUBS), Card::SUIT_SPADES);
-}
-
-TEST(test_Card_less_self) {
-    Card three_spades = Card(Card::RANK_THREE, Card::SUIT_SPADES);
-    ASSERT_FALSE(Card_less(three_spades, three_spades, Card::SUIT_CLUBS));
-    ASSERT_FALSE(Card_less(three_spades, three_spades, three_spades,
-                           Card::SUIT_CLUBS));
-}
-
-TEST(test_card_insertion) {
-    Card three_spades = Card(Card::RANK_THREE, Card::SUIT_SPADES);
-    ostringstream oss;
-    oss << three_spades;
-    ASSERT_EQUAL(oss.str(), "Three of Spades");
-}
+// Add more tests here
 
 TEST_MAIN()
