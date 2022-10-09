@@ -51,7 +51,7 @@ string Card::get_suit() const{
 
 string Card::get_suit(const string &trump) const{
     Card lbower = Card("Jack", Suit_next(trump));
-    if(lbower == Card(suit, rank)){ //instead of creating a new card, how do you access the card? this.card
+    if(lbower == Card(rank, suit)){ 
         return trump;
     }
     return suit;
@@ -59,10 +59,11 @@ string Card::get_suit(const string &trump) const{
 
   //EFFECTS Returns true if card is a face card (Jack, Queen, King or Ace)
 bool Card::is_face_or_ace() const{
-    if(Card("10", SUIT_DIAMONDS) < Card(rank, suit)){ //test case suit ties
+    if( rank == RANK_JACK || rank == RANK_QUEEN || rank == RANK_KING || rank == RANK_ACE ){
         return true;
     }
     return false;
+    
 }
 bool Card::is_right_bower(const string &trump) const{
     return Card("Jack", trump) == Card(rank, suit);
@@ -71,7 +72,7 @@ bool Card::is_left_bower(const string &trump) const{
     return Card("Jack", Suit_next(trump)) == Card(rank, suit);
 }
 bool Card::is_trump(const string &trump) const{
-    return (get_suit().compare(trump) == 0);
+    return (get_suit(trump) == trump);
 }
 
 //EFFECTS Returns true if lhs is lower value than rhs.
@@ -143,7 +144,7 @@ bool operator<(const Card &lhs, const Card &rhs){
 //EFFECTS Returns true if lhs is lower value than rhs or the same card as rhs.
 //  Does not consider trump.
 bool operator<=(const Card &lhs, const Card &rhs){
-    return lhs < rhs || lhs == rhs;
+    return (lhs < rhs || lhs == rhs);
 }
 
 //EFFECTS Returns true if lhs is higher value than rhs.
@@ -161,8 +162,8 @@ bool operator>=(const Card &lhs, const Card &rhs) {
 //EFFECTS Returns true if lhs is same card as rhs.
 //  Does not consider trump.
 bool operator==(const Card &lhs, const Card &rhs) {
-    if (lhs.get_rank().compare(rhs.get_rank())==0) {
-        if (lhs.get_suit().compare(rhs.get_suit())==0) {
+    if (lhs.get_rank() == rhs.get_rank()) {
+        if (lhs.get_suit() == rhs.get_suit()) {
             return true;
         }
     }
