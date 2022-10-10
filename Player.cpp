@@ -1,6 +1,5 @@
 //Project UID 1d9f47bfc76643019cfbf037641defe1
 #include <sstream>
-#include "unit_test_framework.h"
 #include "Pack.h"
 #include "Card.h"
 #include "Player.h"
@@ -9,6 +8,7 @@ using namespace std;
 #include <string>
 #include <vector>
 #include <cassert>
+#include <algorithm>
 
 class SimplePlayer: public Player{
     private:
@@ -56,6 +56,8 @@ class SimplePlayer: public Player{
             }
             return false;        
         }
+        assert(false);
+        return false;
     }
 
 
@@ -81,7 +83,7 @@ class SimplePlayer: public Player{
                 max_index = i;
             }
         }
-        int max_index = 0;
+        max_index = 0;
         for(int i=0; i<cardsp.size(); i++){
             if(Card_less(cardsp[i], cardsp[max_index], trump)){
                 max_index = i;
@@ -142,29 +144,12 @@ class SimplePlayer: public Player{
 
     static const int MAX_HAND_SIZE = 5;
 
-    ~SimplePlayer() {}
-
-    Player * Player_factory(const std::string &name, const std::string &strategy){
-        if(strategy == "Simple"){
-            return new SimplePlayer(name);
-        }
-        if(strategy == "Human"){
-            return new HumanPlayer(name);
-        }
-        assert(false);
-        return nullptr;
+    static Card return_card(int index){
+        return cardsp[index];
     }
-
-    std::ostream & operator<<(std::ostream &os, const Player &p){
-        os << p.get_name() << endl;
-        return os;
-    }
-
-    Card return_card(int index, SimplePlayer *a){
-        return a->cardsp[index];
-    }
-
-    class HumanPlayer: public Player{
+};
+    
+class HumanPlayer: public Player{
     private:
         string nameh;
         vector<Card> cardsh;
@@ -241,19 +226,25 @@ class SimplePlayer: public Player{
         //EFFECTS  Plays one Card from Player's hand according to their strategy.
         //  The card is removed from the player's hand.
         Card play_card(const Card &led_card, const std::string &trump){
-            lead_card(trump);
+            return lead_card(trump);
         }
 
         // Maximum number of cards in a player's hand
-        static const int MAX_HAND_SIZE = 5;
-
-        // Needed to avoid some compiler errors
-        ~HumanPlayer() {}
-
-        //EFFECTS: Prints player's name to os
-        std::ostream & operator<<(std::ostream &os, const Player &p){
-            os << p.get_name() << endl;
-            return os;
-        }
-    }
+        static const int MAX_HAND_SIZE = 5;    
+};
+    
+std::ostream & operator<<(std::ostream &os, const Player &p){
+    os << p.get_name() << endl;
+        return os;
 }
+
+Player * Player_factory(const std::string &name, const std::string &strategy){
+        if(strategy == "Simple"){
+            return new SimplePlayer(name);
+        }
+        if(strategy == "Human"){
+            return new HumanPlayer(name);
+        }
+        assert(false);
+        return nullptr;
+    }
