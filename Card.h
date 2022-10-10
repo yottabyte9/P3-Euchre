@@ -146,6 +146,6 @@ bool Card_less(const Card &a, const Card &b, const std::string &trump);
 bool Card_less(const Card &a, const Card &b, const Card &led_card,
                const std::string &trump);
 
-static double Card_num_val(const Card &lhs, const Card &rhs);
+double Card_num_val_rml(const Card &lhs, const Card &rhs);
 
 #endif
