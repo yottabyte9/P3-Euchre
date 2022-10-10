@@ -61,8 +61,8 @@ using namespace std;
   // REQUIRES: cards remain in the Pack
   // EFFECTS: Returns the next card in the pack and increments the next index
   Card Pack::deal_one(){
-    next += 1;
-    return cards[next--];
+    next +=1;
+    return cards[next-1];
   }
 
   // EFFECTS: Resets next index to first card in the Pack
@@ -77,24 +77,25 @@ using namespace std;
     for(int i=0; i<7; i++){ //iterates 7 times
       std::array<Card, PACK_SIZE/2> cards1;
       for(int j=0; j<PACK_SIZE/2; j++){
-        cards1[i] = cards[i];
+        cards1[j] = cards[j];
       }
       std::array<Card, PACK_SIZE/2> cards2;
       for(int j=0; j<PACK_SIZE/2; j++){
         cards2[j] = cards[j+PACK_SIZE/2];
       }
-      std::array<Card, PACK_SIZE> cardsf;
+      //std::array<Card, PACK_SIZE> cardsf;
       int counter = 0;
       for(int k=0; k<PACK_SIZE-1; k+=2){
-        cardsf[k] = cards1[counter];
-        cardsf[k+1] = cards2[counter];
+        cards[k] = cards2[counter];
+        cards[k+1] = cards1[counter];
+        cout << cards[k] << endl;
+        cout << cards[k+1] << endl;
         counter ++;
       }
-      cards = cardsf;
     }
   }
 
   // EFFECTS: returns true if there are no more cards left in the pack
   bool Pack::empty() const{
-    return PACK_SIZE - next == 1;
+    return PACK_SIZE - next == 0;
   }
