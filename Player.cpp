@@ -1,6 +1,5 @@
 //Project UID 1d9f47bfc76643019cfbf037641defe1
 #include <sstream>
-#include "Pack.h"
 #include "Card.h"
 #include "Player.h"
 using namespace std;
@@ -85,7 +84,7 @@ class SimplePlayer: public Player{
         }
         max_index = 0;
         for(int i=0; i<cardsp.size(); i++){
-            if(Card_less(cardsp[i], cardsp[max_index], trump)){
+            if(Card_less(cardsp[max_index], cardsp[i], trump)){
                 max_index = i;
             }
         }
@@ -144,9 +143,6 @@ class SimplePlayer: public Player{
 
     static const int MAX_HAND_SIZE = 5;
 
-    static Card return_card(int index){
-        return cardsp[index];
-    }
 };
     
 class HumanPlayer: public Player{
@@ -234,7 +230,7 @@ class HumanPlayer: public Player{
 };
     
 std::ostream & operator<<(std::ostream &os, const Player &p){
-    os << p.get_name() << endl;
+    os << p.get_name();
         return os;
 }
 
