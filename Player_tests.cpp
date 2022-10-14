@@ -1,253 +1,574 @@
-//Project UID 1d9f47bfc76643019cfbf037641defe1
-#include <sstream>
-#include "Card.h"
+// Project UID 1d9f47bfc76643019cfbf037641defe1
+
 #include "Player.h"
+#include "unit_test_framework.h"
+#include "Card.h"
+
+#include <iostream>
+#include <vector>
+
 using namespace std;
 
-#include <string>
-#include <vector>
-#include <cassert>
-#include <algorithm>
+TEST(test_player_get_name_empty) {
+    Player * alice = Player_factory("Alice", "Simple");
+    ASSERT_EQUAL("Alice", alice->get_name());
 
-class SimplePlayer: public Player{
-    private:
-        string namep;
-        vector<Card> cardsp;
-    public: 
+    delete alice;
 
-    SimplePlayer(string name) : namep(name){};
+    Player * empty = Player_factory("", "Simple");
+    ASSERT_EQUAL("", empty->get_name());
+    delete empty;
 
-    const std::string & get_name() const{
-        return namep;
-    }
-
-    void add_card(const Card &c){
-        if(cardsp.size() < MAX_HAND_SIZE){
-            cardsp.push_back(c);
-        }
-    }
-
-    bool make_trump(const Card &upcard, bool is_dealer, int round, std::string &order_up_suit) const {
-
-        int num_suit_hand = 0;
-        int next_num_suit_hand = 0;
-        for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit(upcard.get_suit()) == upcard.get_suit()){
-                num_suit_hand += 1;
-            }
-            if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit() == Suit_next(upcard.get_suit())){
-                next_num_suit_hand += 1;
-            }
-        }
-        
-        if(round == 1){
-            if(num_suit_hand >= 2){
-                order_up_suit = upcard.get_suit();
-                return true;
-            }
-            return false;
-        }
-        else if(round == 2){
-            if(is_dealer){
-                order_up_suit = Suit_next(upcard.get_suit());
-                return true;
-            }
-            
-            if(next_num_suit_hand >= 1){
-                order_up_suit = Suit_next(upcard.get_suit());
-                return true;
-            }
-            return false;        
-        }
-        assert(false);
-        return false;
-    }
-
-
-    void add_and_discard(const Card &upcard){
-        cardsp.push_back(upcard);
-        int min_index = 0;
-        for(int i=0; i<cardsp.size(); i++){
-            if(Card_less(cardsp[i], cardsp[min_index], upcard.get_suit())){
-                min_index = i;
-            }
-        }
-        cardsp.erase(cardsp.begin()+min_index);
-        for (int i = 0; i < 5; i++) {
-        }
-    }
-
-    Card lead_card(const std::string &trump){
-        int max_index = 0;
-        int trump_counter = 0;
-        for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i].get_suit(trump) == trump){
-                trump_counter ++;
-            }
-            else {
-                max_index = i;
-            }
-        }
-        if (trump_counter == cardsp.size()) {
-            for (int j=0; j < cardsp.size(); j++) {
-                if(Card_less(cardsp[max_index],cardsp[j],trump)) {
-                    max_index = j;
-                }
-            }
-            Card done = cardsp[max_index];
-            cardsp.erase(cardsp.begin() + max_index);
-            return done;
-        }
-        for (int k = 0; k<cardsp.size();k++) {
-            if (cardsp[k].get_suit(trump) != trump) {
-                if (Card_less(cardsp[max_index],cardsp[k],trump)) {
-                    max_index = k;
-                }
-            }
-        }
-        Card done = cardsp[max_index];
-        cardsp.erase(cardsp.begin() + max_index);
-        return done;
-    }
-
-
-    Card play_card(const Card &led_card, const std::string &trump){
-        int followIndex = 0;
-        int lowIndex = 0;
-        int countLed = 0;
-        for (int i = 0; i < cardsp.size(); i++) {
-            if (cardsp[i].get_suit(trump) == led_card.get_suit(trump)) {
-                countLed++;
-                followIndex = i;
-            }
-            if (Card_less(cardsp[i], cardsp[lowIndex], led_card, trump)) {
-                lowIndex = i;
-            }
-        }
-        if (countLed == 0) {
-            Card tempcard = cardsp[lowIndex];
-            cardsp.erase(cardsp.begin() + lowIndex);
-            return tempcard;
-        }
-        else if (countLed == 1) {
-            Card tempcard = cardsp[followIndex];
-            cardsp.erase(cardsp.begin() + followIndex);
-            return tempcard;
-        }
-        else {
-            for (int j = 0; j < cardsp.size(); j++) {
-                if (cardsp[j].get_suit(trump) == led_card.get_suit(trump)) {
-                    if (Card_less(cardsp[followIndex], cardsp[j], trump)) {
-                        followIndex = j;
-                    }
-                }
-            }
-            Card tempcard = cardsp[followIndex];
-            cardsp.erase(cardsp.begin() + followIndex);
-            return tempcard;
-        }
-    }
-
-    static const int MAX_HAND_SIZE = 5;
-
-};
-    
-class HumanPlayer: public Player{
-    private:
-        string nameh;
-        vector<Card> cardsh;
-    public:
-
-        HumanPlayer(string name) : nameh(name){};
-
-        virtual const std::string & get_name() const{
-            return nameh;
-        }
-
-        void add_card(const Card &c){
-            if(cardsh.size() < MAX_HAND_SIZE){
-                cardsh.push_back(c);
-            }
-        }
-
-        //REQUIRES round is 1 or 2
-        //MODIFIES order_up_suit
-        //EFFECTS If Player wishes to order up a trump suit then return true and
-        //  change order_up_suit to desired suit.  If Player wishes to pass, then do
-        //  not modify order_up_suit and return false.
-        bool make_trump(const Card &upcard, bool is_dealer,
-                                int round, std::string &order_up_suit) const{
-            print_hand();
-            cout << "Human player " << nameh << ", please enter a suit, or \"pass\":\n";
-            string suit_in;
-            cin >> suit_in;
-            if(suit_in != "pass"){
-                order_up_suit = suit_in;
-                return true;
-            }
-            return false;
-        }
-
-        void print_hand() const {
-            for (size_t i=0; i < cardsh.size(); ++i) {
-                cout << "Human player " << nameh << "'s hand: "
-                << "[" << i << "] " << cardsh[i] << "\n";
-            }
-        }
-
-        //REQUIRES Player has at least one card
-        //EFFECTS  Player adds one card to hand and removes one card from hand.
-        void add_and_discard(const Card &upcard){
-            print_hand();
-            cout << "Discard upcard: [-1]\n";
-            cout << "Human player " << nameh << ", please select a card to discard:\n";
-            int discard_num;
-            cin >> discard_num;
-            if(discard_num != -1){
-                cardsh.erase(cardsh.begin() + discard_num);
-                cardsh.push_back(upcard);
-                std::sort(cardsh.begin(), cardsh.end());
-            }
-            std::sort(cardsh.begin(), cardsh.end());
-        }
-
-        //REQUIRES Player has at least one card, trump is a valid suit
-        //EFFECTS  Leads one Card from Player's hand according to their strategy
-        //  "Lead" means to play the first Card in a trick.  The card
-        //  is removed the player's hand.
-        Card lead_card(const std::string &trump){
-            print_hand();
-            cout << "Human player " << nameh << ", please select a card:\n";
-            int play_num;
-            cin >> play_num;
-            Card tempcard = cardsh[play_num];
-            cardsh.erase(cardsh.begin() + play_num);
-            return tempcard;
-        }
-
-        //REQUIRES Player has at least one card, trump is a valid suit
-        //EFFECTS  Plays one Card from Player's hand according to their strategy.
-        //  The card is removed from the player's hand.
-        Card play_card(const Card &led_card, const std::string &trump){
-            return lead_card(trump);
-        }
-
-        // Maximum number of cards in a player's hand
-        static const int MAX_HAND_SIZE = 5;    
-};
-    
-std::ostream & operator<<(std::ostream &os, const Player &p){
-    os << p.get_name();
-        return os;
+    Player * r = Player_factory("r", "Simple");
+    ASSERT_EQUAL("r", r->get_name());
+    delete r;
 }
 
-Player * Player_factory(const std::string &name, const std::string &strategy){
-        if(strategy == "Simple"){
-            return new SimplePlayer(name);
-        }
-        if(strategy == "Human"){
-            return new HumanPlayer(name);
-        }
-        assert(false);
-        return nullptr;
-    }
+TEST(test_add_card){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_JACK, Card::SUIT_CLUBS);
+    alice->add_card(c1);
+    //ASSERT_EQUAL(return_card(0,alice), c1);
+    Card c2(Card::RANK_TEN, Card::SUIT_CLUBS);
+    alice->add_card(c2);
+    //ASSERT_EQUAL(return_card(1,alice), c2);
+    alice->add_card(c2);
+    alice->add_card(c2);
+    alice->add_card(c1);
+   // ASSERT_EQUAL(return_card(4,alice), c1);
+    delete alice;
+}
+
+TEST(test_make_trump_1){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard1 = Card(Card::RANK_KING, Card::SUIT_DIAMONDS);
+
+    bool isDealer1 = false;
+    int round1 = 1;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_TRUE(alice->make_trump(upcard1, isDealer1, round1, orderup));
+    ASSERT_EQUAL(orderup, Card::SUIT_DIAMONDS);
+    delete alice;
+}
+
+TEST(test_make_trump_2){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard2 = Card(Card::RANK_TEN, Card::SUIT_SPADES);
+
+    bool isDealer1 = false;
+    int round2 = 2;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_FALSE(alice->make_trump(upcard2, isDealer1, round2, orderup)); // change
+    ASSERT_EQUAL(orderup, "");
+    delete alice;
+}
+
+TEST(test_make_trump_3){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard2 = Card(Card::RANK_TEN, Card::SUIT_SPADES);
+
+    bool isDealer1 = false;
+    int round1 = 1;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_FALSE(alice->make_trump(upcard2, isDealer1, round1, orderup));
+    ASSERT_EQUAL(orderup, "");
+    delete alice;
+}
+
+TEST(test_make_trump_4){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard1 = Card(Card::RANK_KING, Card::SUIT_DIAMONDS);
+
+    bool isDealer1 = false;
+    int round2 = 2;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_TRUE(alice->make_trump(upcard1, isDealer1, round2, orderup)); // change
+    ASSERT_EQUAL(orderup, Card::SUIT_HEARTS);
+    delete alice;
+}
+
+TEST(test_make_trump_5){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard3 = Card(Card::RANK_QUEEN, Card::SUIT_CLUBS);
+
+    bool isDealer1 = false;
+    int round1 = 1;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_FALSE(alice->make_trump(upcard3, isDealer1, round1, orderup));
+    ASSERT_EQUAL(orderup, "");
+    delete alice;
+}
+
+TEST(test_make_trump_6){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard3 = Card(Card::RANK_QUEEN, Card::SUIT_CLUBS);
+
+    bool isDealer1 = false;
+    int round2 = 2;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_TRUE(alice->make_trump(upcard3, isDealer1, round2, orderup)); // change
+    ASSERT_EQUAL(orderup, Card::SUIT_SPADES);
+    delete alice;
+}
+
+TEST(test_make_trump_7){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard3 = Card(Card::RANK_QUEEN, Card::SUIT_CLUBS);
+
+    bool isDealer2 = true;
+    int round2 = 2;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_TRUE(alice->make_trump(upcard3, isDealer2, round2, orderup));
+    ASSERT_EQUAL(orderup, Card::SUIT_SPADES);
+    delete alice;
+}
+
+TEST(test_make_trump_8){
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); //left bower
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    string orderup;
+    Card upcard3 = Card(Card::RANK_QUEEN, Card::SUIT_CLUBS);
+
+    bool isDealer2 = true;
+    int round1 = 1;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    ASSERT_FALSE(alice->make_trump(upcard3, isDealer2, round1, orderup));
+    ASSERT_EQUAL(orderup, "");
+    delete alice;
+}
+
+TEST(test_add_and_discard_1) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_CLUBS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_ACE, Card::SUIT_SPADES);
+    Card upcard1 = Card(Card::RANK_KING, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    alice->add_and_discard(upcard1);
+    Card send1 = alice->lead_card(Card::SUIT_DIAMONDS);
+    Card correct1(Card::RANK_ACE, Card::SUIT_SPADES);
+    ASSERT_EQUAL(send1, correct1);
+    delete alice;
+} 
+
+TEST(test_add_and_discard_2) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_CLUBS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_KING, Card::SUIT_SPADES);
+    Card upcard2 = Card(Card::RANK_NINE, Card::SUIT_SPADES);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    alice->add_and_discard(upcard2);
+    Card send2 = alice->lead_card(Card::SUIT_SPADES);
+    Card correct2(Card::RANK_JACK, Card::SUIT_HEARTS);
+    ASSERT_EQUAL(send2, correct2);
+    delete alice;
+}
+
+TEST(test_add_and_discard_3) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_KING, Card::SUIT_DIAMONDS);
+    Card upcard3 = Card(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    alice->add_and_discard(upcard3);
+    Card send3 = alice->lead_card(Card::SUIT_DIAMONDS);
+    Card correct3(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(send3, correct3);
+    delete alice;
+}
+
+
+
+TEST(test_add_and_discard_4) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    Card upcard4 = Card(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+
+    alice->add_and_discard(upcard4);
+    Card send4 = alice->lead_card(Card::SUIT_DIAMONDS);
+    Card correct4(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(send4, correct4);
+    delete alice;
+}
+
+TEST(test_add_and_discard_5) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card upcard5 = Card(Card::RANK_NINE, Card::SUIT_CLUBS);
+
+    alice->add_card(c1);
+
+    alice->add_and_discard(upcard5);
+    Card send5 = alice->lead_card(Card::SUIT_CLUBS);
+    Card correct5(Card::RANK_NINE, Card::SUIT_CLUBS);
+    ASSERT_EQUAL(send5, correct5);
+    delete alice;
+}
+
+TEST(test_add_and_discard_6) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_ACE, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_KING, Card::SUIT_DIAMONDS);
+    Card upcard6 = Card(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    alice->add_and_discard(upcard6);
+    Card send6 = alice->lead_card(Card::SUIT_DIAMONDS);
+    Card correct6(Card::RANK_JACK, Card::SUIT_HEARTS);
+    ASSERT_EQUAL(send6, correct6);
+    delete alice;
+}
+
+TEST(test_add_and_discard_7) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_TEN, Card::SUIT_DIAMONDS); 
+    Card c3(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_KING, Card::SUIT_DIAMONDS);
+    Card upcard7 = Card(Card::RANK_ACE, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+
+    alice->add_and_discard(upcard7);
+    Card send7 = alice->lead_card(Card::SUIT_DIAMONDS);
+    Card correct7(Card::RANK_ACE, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(send7, correct7);
+    delete alice;
+}
+
+TEST(test_play_card_1) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_KING, Card::SUIT_DIAMONDS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+    Card consider1(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card correct1(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(alice->play_card(consider1, "Diamonds"), correct1);
+    delete alice;
+}
+
+TEST(test_play_card_2) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_CLUBS);
+    Card c4(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c5(Card::RANK_KING, Card::SUIT_SPADES);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider2(Card::RANK_KING, Card::SUIT_CLUBS);
+    Card correct2(Card::RANK_TEN, Card::SUIT_CLUBS);
+    ASSERT_EQUAL(alice->play_card(consider2, "Diamonds"), correct2);
+    delete alice;
+}
+
+TEST(test_play_card_3) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_SPADES);
+    Card c4(Card::RANK_TEN, Card::SUIT_SPADES);
+    Card c5(Card::RANK_KING, Card::SUIT_SPADES);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider3(Card::RANK_KING, Card::SUIT_CLUBS);
+    Card correct3(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(alice->play_card(consider3, "Spades"), correct3);
+    delete alice;
+}
+
+TEST(test_play_card_4) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_SPADES);
+    Card c2(Card::RANK_ACE, Card::SUIT_SPADES); 
+    Card c3(Card::RANK_NINE, Card::SUIT_SPADES);
+    Card c4(Card::RANK_TEN, Card::SUIT_SPADES);
+    Card c5(Card::RANK_KING, Card::SUIT_SPADES);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider4(Card::RANK_JACK, Card::SUIT_SPADES);
+    Card correct4(Card::RANK_ACE, Card::SUIT_SPADES);
+    ASSERT_EQUAL(alice->play_card(consider4, "Hearts"), correct4);
+    delete alice;
+}
+
+TEST(test_play_card_5) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_SPADES);
+    Card c2(Card::RANK_JACK, Card::SUIT_SPADES); 
+    Card c3(Card::RANK_NINE, Card::SUIT_SPADES);
+    Card c4(Card::RANK_TEN, Card::SUIT_SPADES);
+    Card c5(Card::RANK_KING, Card::SUIT_SPADES);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider5(Card::RANK_ACE, Card::SUIT_SPADES);
+    Card correct5(Card::RANK_JACK, Card::SUIT_SPADES);
+    ASSERT_EQUAL(alice->play_card(consider5, "Spades"), correct5);
+    delete alice;
+}
+
+TEST(test_play_card_6) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_HEARTS);
+    Card c2(Card::RANK_JACK, Card::SUIT_HEARTS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_NINE, Card::SUIT_HEARTS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider6(Card::RANK_ACE, Card::SUIT_CLUBS);
+    Card correct6(Card::RANK_NINE, Card::SUIT_HEARTS);
+    ASSERT_EQUAL(alice->play_card(consider6, "Spades"), correct6);
+    delete alice;
+}
+
+TEST(test_play_card_7) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_QUEEN, Card::SUIT_HEARTS);
+
+    alice->add_card(c1);
+
+    Card consider7(Card::RANK_ACE, Card::SUIT_HEARTS);
+    Card correct7(Card::RANK_QUEEN, Card::SUIT_HEARTS);
+    ASSERT_EQUAL(alice->play_card(consider7, "Spades"), correct7);
+    delete alice;
+}
+
+TEST(test_play_card_8) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_TEN, Card::SUIT_CLUBS);
+
+    alice->add_card(c1);
+
+    Card consider8(Card::RANK_ACE, Card::SUIT_HEARTS);
+    Card correct8(Card::RANK_TEN, Card::SUIT_CLUBS);
+    ASSERT_EQUAL(alice->play_card(consider8, "Spades"), correct8);
+    delete alice;
+}
+
+TEST(test_play_card_9) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_TEN, Card::SUIT_HEARTS);
+    Card c2(Card::RANK_JACK, Card::SUIT_CLUBS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_NINE, Card::SUIT_HEARTS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider9(Card::RANK_ACE, Card::SUIT_HEARTS);
+    Card correct9(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(alice->play_card(consider9, "Hearts"), correct9);
+    delete alice;
+}
+
+TEST(test_play_card_10) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_TEN, Card::SUIT_HEARTS);
+    Card c2(Card::RANK_JACK, Card::SUIT_CLUBS); 
+    Card c3(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c4(Card::RANK_JACK, Card::SUIT_DIAMONDS);
+    Card c5(Card::RANK_NINE, Card::SUIT_HEARTS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+    alice->add_card(c4);
+    alice->add_card(c5);
+
+    Card consider10(Card::RANK_ACE, Card::SUIT_DIAMONDS);
+    Card correct10(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    ASSERT_EQUAL(alice->play_card(consider10, "Hearts"), correct10);
+    delete alice;
+}
+
+TEST(test_play_card_11) {
+    Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_TEN, Card::SUIT_DIAMONDS);
+    Card c3(Card::RANK_NINE, Card::SUIT_SPADES);
+
+    Card led1(Card::RANK_KING, Card::SUIT_DIAMONDS);
+    string trump = Card::SUIT_HEARTS;
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+
+    alice->play_card(led1, trump); //will play c2 and remove c2 
+    ASSERT_EQUAL(alice->play_card(led1, trump), c1); 
+
+    delete alice;
+}
+
+TEST_MAIN()
