@@ -30,9 +30,13 @@ class SimplePlayer: public Player{
     bool make_trump(const Card &upcard, bool is_dealer, int round, std::string &order_up_suit) const {
 
         int num_suit_hand = 0;
+        int next_num_suit_hand = 0;
         for(int i=0; i<cardsp.size(); i++){
             if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit(upcard.get_suit()) == upcard.get_suit()){
                 num_suit_hand += 1;
+            }
+            if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit() == Suit_next(upcard.get_suit())){
+                next_num_suit_hand += 1;
             }
         }
         
@@ -49,8 +53,8 @@ class SimplePlayer: public Player{
                 return true;
             }
             
-            if(num_suit_hand >= 1){
-                order_up_suit = upcard.get_suit();
+            if(next_num_suit_hand >= 1){
+                order_up_suit = Suit_next(upcard.get_suit());
                 return true;
             }
             return false;        
@@ -64,45 +68,48 @@ class SimplePlayer: public Player{
         cardsp.push_back(upcard);
         int min_index = 0;
         for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i] < cardsp[min_index]){
+            if(Card_less(cardsp[i], cardsp[min_index], upcard.get_suit())){
                 min_index = i;
             }
         }
         cardsp.erase(cardsp.begin()+min_index);
+        for (int i = 0; i < 5; i++) {
+        }
     }
 
     Card lead_card(const std::string &trump){
-        int max_index;
+        int max_index = 0;
         int trump_counter = 0;
         for(int i=0; i<cardsp.size(); i++){
             if(cardsp[i].get_suit(trump) == trump){
                 trump_counter ++;
             }
-            if(cardsp[i].get_suit(trump) != trump){
+            else {
                 max_index = i;
             }
         }
-        max_index = 0;
-        for(int i=0; i<cardsp.size(); i++){
-            if(Card_less(cardsp[max_index], cardsp[i], trump)){
-                max_index = i;
+        if (trump_counter == cardsp.size()) {
+            for (int j=0; j < cardsp.size(); j++) {
+                if(Card_less(cardsp[max_index],cardsp[j],trump)) {
+                    max_index = j;
+                }
             }
-        }
-        if(trump_counter == MAX_HAND_SIZE){
-            Card tempcard = cardsp[max_index];
+            Card done = cardsp[max_index];
             cardsp.erase(cardsp.begin() + max_index);
-            return tempcard;
+            return done;
         }
-        
-        for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i] > cardsp[max_index] && cardsp[i].get_suit(trump) != trump){
-                max_index = i;
+        for (int k = 0; k<cardsp.size();k++) {
+            if (cardsp[k].get_suit(trump) != trump) {
+                if (Card_less(cardsp[max_index],cardsp[k],trump)) {
+                    max_index = k;
+                }
             }
         }
-        Card tempcard = cardsp[max_index];
+        Card done = cardsp[max_index];
         cardsp.erase(cardsp.begin() + max_index);
-        return tempcard;
+        return done;
     }
+
 
     Card play_card(const Card &led_card, const std::string &trump){
         int followIndex = 0;
