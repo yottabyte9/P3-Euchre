@@ -13,47 +13,76 @@ using namespace std;
 
 class Game {
     public:
-        int partner1_pts;
-        int partner2_pts;
-        Game(Pack packc, int hand, int dealer_number, int round): hand(0), dealer_number(0), round(1){
-            pack = packc;
+        Game(string exec,std::istream& use,string shuffleC,
+        int pts,string n1,string t1,string n2,string t2,
+        string n3,string t3,string n4,string t4) {
+            entry = exec;
+            Pack pack(use);
+            p1 = Player_factory(n1, t1);
+            p2 = Player_factory(n2, t2);
+            p3 = Player_factory(n3, t3);
+            p4 = Player_factory(n4, t4);
+            players.push_back(p1);
+            players.push_back(p2);
+            players.push_back(p3);
+            players.push_back(p4);
+            if (shuffleC == "shuffle") {
+                shuffleCards = true;
+            }
+            if (shuffleC == "noshuffle") {
+                shuffleCards = false;
+            }
         }
-        void play();
+        void play() {
+            
+        }
+    private:
+        std::vector<Player*> players;
+        Pack pack;
+        Player *p1;
+        Player *p2;
+        Player *p3;
+        Player *p4;
+        bool shuffleCards;
+        string entry;
+        string trump;
+        Card upcard;
+        int round;
+        bool dealer;
 
         void shuffle(){
             pack.shuffle();
         }
 
-        void Dealxcards(int playerindex, int numcards){
+        void Dealxcards(Player *player, int numcards){
             for(int i=0; i<numcards; i++){
-                players[playerindex] -> add_card(pack.deal_one());
+                player->add_card(pack.deal_one());
             }
         }
 
-        void Dealcards(){
-            Dealxcards(0, 3);
-            Dealxcards(1, 2);
-            Dealxcards(2, 3);
-            Dealxcards(3, 2);
+        void Dealcards(Player *player1, Player *player2, 
+        Player *player3, Player *player4){
+            Dealxcards(player1, 3);
+            Dealxcards(player2, 2);
+            Dealxcards(player3, 3);
+            Dealxcards(player4, 2);
 
-            Dealxcards(0, 2);
-            Dealxcards(1, 3);
-            Dealxcards(2, 2);
-            Dealxcards(3, 3);
+            Dealxcards(player1, 2);
+            Dealxcards(player2, 3);
+            Dealxcards(player3, 2);
+            Dealxcards(player4, 3);
             upcard = pack.deal_one();
         }
 
-        void MakeTrump(){
-            for(int i=0; i<4; i++){
-                if(players[i]->make_trump(upcard, is_dealer, round, trump)){
-                    trump = upcard.get_suit();
-                    players[dealer_number]->add_and_discard(upcard);
-                }
+        void MakeTrump(Player *player1){
+            if(player1->make_trump(upcard, dealer, round, trump)){
+                trump = upcard.get_suit();
+                players[0]->add_and_discard(upcard);
             }
         }
 
         // card c0,1,2,3 corresponds to the order of players
-        int HandWinningPlayer(Card c0, Card c1, Card c2, Card c3, Card led){ 
+        int TrickWinningPlayer(Card c0, Card c1, Card c2, Card c3, Card led){ 
             if(Card_less(c1,c0,led, trump)){ //true if c1<c0
                 if(Card_less(c2, c0, led, trump)){ //true if c2<c0
                     if(Card_less(c3,c0, led, trump)){//true if c3<c0
@@ -82,22 +111,7 @@ class Game {
                     }
                 }
             }
-            return -1;
         }
-
-        void TrickTaking(){
-            
-        }
-
-    private:
-        std::vector<Player*> players;
-        Pack pack;
-        Card upcard;
-        int hand;
-        bool is_dealer;
-        int dealer_number;
-        std::string trump;
-        int round;
 
 };
 
@@ -115,16 +129,16 @@ int main(int argc, char **argv) {
         << "NAME4 TYPE4" << endl;
         return 1;
     }
-    if(argv[2] != "shuffle" && argv[2] != "noshuffle"){
+    if(!((strcmp(argv[2], "shuffle") == 0) || (strcmp(argv[2], "noshuffle") == 0))){
         cout << "Usage: euchre.exe PACK_FILENAME [shuffle|noshuffle] "
         << "POINTS_TO_WIN NAME1 TYPE1 NAME2 TYPE2 NAME3 TYPE3 "
         << "NAME4 TYPE4" << endl;
         return 1;
     }
-    if((argv[5] != "Simple" && argv[5] != "Human") ||
-       (argv[7] != "Simple" && argv[7] != "Human") ||
-       (argv[9] != "Simple" && argv[9] != "Human") ||
-       (argv[11] != "Simple" && argv[11] != "Human")){
+    if((!((strcmp(argv[5], "Simple") == 0) || (strcmp(argv[5], "Human") == 0))) ||
+       (!((strcmp(argv[7], "Simple") == 0) || (strcmp(argv[7], "Human") == 0))) ||
+       (!((strcmp(argv[9], "Simple") == 0) || (strcmp(argv[9], "Human") == 0))) ||
+       (!((strcmp(argv[11], "Simple") == 0) || (strcmp(argv[11], "Human") == 0)))) {
         cout << "Usage: euchre.exe PACK_FILENAME [shuffle|noshuffle] "
         << "POINTS_TO_WIN NAME1 TYPE1 NAME2 TYPE2 NAME3 TYPE3 "
         << "NAME4 TYPE4" << endl;
@@ -136,12 +150,26 @@ int main(int argc, char **argv) {
         cout << "Error opening " << inFile << endl;
         return 1;
     }
-
-    Game game(/* game details */);
+    string executable = argv[0];
+    string shuffle = argv[2];
+    int points = atoi(argv[3]);
+    string name1 = argv[4];
+    string type1 = argv[5];
+    string name2 = argv[6];
+    string type2 = argv[7];
+    string name3 = argv[8];
+    string type3 = argv[9];
+    string name4 = argv[10];
+    string type4 = argv[11];
+    for (int i = 0; i < argc; i++) {
+        cout << argv[i] << " ";
+    }
+    cout << endl;
+    Game game(executable,fin,shuffle,points,name1,
+    type1,name2,type2,name3,type3,name4,type4);
     game.play();
 
-    for (size_t i = 0; i < players.size(); ++i) {
+    /*for (size_t i = 0; i < players.size(); ++i) {
         delete players[i];
-    }
+    } */
 }
-
