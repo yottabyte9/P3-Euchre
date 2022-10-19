@@ -36,6 +36,9 @@ class Game {
             trumpMade = false;
             hand = 0;
             dealer = false;
+            team1score = 0;
+            team2score = 0;
+            orderedUp = 0;
         }
         void play() {
             //int team1Pts = 0;
@@ -77,9 +80,10 @@ class Game {
                     n++;
                     i = (hand+n)%4;
                 }
+                orderedUp = (hand+n-1)%4;
                 round = 1;
                 dealer = false;
-
+                PlayHand();
           //  }
         }
     private:
@@ -94,6 +98,9 @@ class Game {
         bool trumpMade;
         bool dealer;
         int hand;
+        int team1score;
+        int team2score;
+        int orderedUp;
 
         void shuffle(){
             pack.shuffle();
@@ -122,7 +129,6 @@ class Game {
             up << upcard;
             cout << up.str() << " turned up" << endl;
         }
-
         void MakeTrump(Player *player1){
             if(player1->make_trump(upcard, dealer, round, trump)){
                 cout << player1->get_name() << " orders up " << trump << endl;
@@ -138,7 +144,34 @@ class Game {
         }
 
         void PlayHand() {
-
+            Card lead;
+            Card play1;
+            Card play2;
+            Card play3;
+            ostringstream current; 
+            int start = 1;
+            for (int j = 0; j < 5; j++) {
+                lead = players[start]->lead_card(trump);
+                current << lead;
+                cout << current.str() << " led by " << players[start]->get_name() << endl;
+                play1 = players[(start+1)%4]->play_card(lead,trump);
+                current.str("");;
+                current << play1;
+                cout << current.str() << " played by " << players[(start+1)%4]->get_name() << endl;
+                play2 = players[(start+2)%4]->play_card(lead,trump);
+                current.str("");
+                current << play2;
+                cout << current.str() << " played by " << players[(start+2)%4]->get_name() << endl;
+                play3 = players[(start+3)%4]->play_card(lead,trump);
+                current.str("");
+                current << play3;
+                cout << current.str() << " played by " << players[(start+3)%4]->get_name() << endl;
+                int trickWinner = TrickWinningPlayer(lead,play1,play2,play3);
+                current.str("");
+                cout << players[(start+trickWinner)%4]->get_name() << " takes the trick" << endl;
+                cout << endl;
+                start = (start+trickWinner)%4;
+            }
         }
 
         void ScoreUpdate(){ // updates the score per hand.
@@ -168,7 +201,7 @@ class Game {
 
             if(team1tricks > team2tricks){
                 cout << players[0]->get_name() << " and " << players[2]->get_name() << " win the hand" << endl;
-                if(orderup){
+                if(orderedUp % 2 == 0){
                     if(team1tricks == 3 || team1tricks == 4){
                         team1score += 1;
                     }
@@ -177,14 +210,14 @@ class Game {
                         cout << "march!" << endl;
                     }
                 }
-                if(!orderup){
+                if(!(orderedUp % 2 == 0)){
                     team1score += 2;
                     cout << "euchred!" << endl;
                 }
             }
             if(team2tricks > team1tricks){
                 cout << players[1]->get_name() << " and " << players[3]->get_name() << " win the hand" << endl;
-                if(orderup){
+                if(orderedUp % 2 == 1){
                     if(team2tricks == 3 || team2tricks == 4){
                         team2score += 1;
                     }
@@ -193,7 +226,7 @@ class Game {
                         cout << "march!" << endl;
                     }
                 }
-                if(!orderup){
+                if(!(orderedUp % 2 == 1)){
                     team2score += 2;
                     cout << "euchred!" << endl;
                 }                  
@@ -225,15 +258,8 @@ class Game {
                     }
                 }
             }
-            if(Card_less(c0,c3,led, trump)){ //true if c0<c3
-                if(Card_less(c1, c3, led, trump)){ //true if c1<c3
-                    if(Card_less(c2,c3, led, trump)){//true if c2<c3
-                        return 3;
-                    }
-                }
-            }
+            return 3;
         }
-
 };
 
 int main(int argc, char **argv) {
