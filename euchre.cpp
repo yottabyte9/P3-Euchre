@@ -37,11 +37,14 @@ class Game {
         void play() {
             int team1Pts = 0;
             int team2Pts = 0;
+            int team1Tricks=0;
+            int team2Tricks=0;
             int hand = 0;
+            bool trumpcall = false;
             while (team1Pts < pts && team2Pts < pts) {
                 cout << "Hand " << hand << endl;
-                cout << players[0] << ""
-            }
+                cout << players[0] << "";
+            }  
         }
     private:
         std::vector<Player*> players;
@@ -53,6 +56,7 @@ class Game {
         Card upcard;
         int round;
         bool dealer;
+        bool orderup = false;
 
         void shuffle(){
             pack.shuffle();
@@ -82,11 +86,13 @@ class Game {
             if(player1->make_trump(upcard, dealer, round, trump)){
                 trump = upcard.get_suit();
                 players[0]->add_and_discard(upcard);
+                orderup = true;
             }
         }
 
         // card c0,1,2,3 corresponds to the order of players
-        int TrickWinningPlayer(Card c0, Card c1, Card c2, Card c3, Card led){ 
+        int TrickWinningPlayer(Card c0, Card c1, Card c2, Card c3){ 
+            Card led = c0; //led card is the first card that is played
             if(Card_less(c1,c0,led, trump)){ //true if c1<c0
                 if(Card_less(c2, c0, led, trump)){ //true if c2<c0
                     if(Card_less(c3,c0, led, trump)){//true if c3<c0
@@ -116,7 +122,69 @@ class Game {
                 }
             }
         }
+        
+        int team1score = 0;
+        int team2score = 0;
+        void ScoreUpdate(){ // updates the score per hand.
+            int team1tricks = 0;
+            int team2tricks = 0;
+            Card c0;
+            Card c1;
+            Card c2;
+            Card c3;
+            for(int i=0; i<5; i++){//5 cards played
+                Card led = players[(dealer+1)%dealer]->lead_card(trump);
+                c0 = players[(dealer+1)%dealer]->play_card(led, trump);
+                c1 = players[(dealer+2)%dealer]->play_card(led, trump);
+                c2 = players[(dealer+3)%dealer]->play_card(led, trump);
+                c3 = players[dealer]->play_card(led, trump);
+            
+                int playerwon = TrickWinningPlayer(c0, c1, c2, c3);
+                if(playerwon % 2 == 0){
+                    team1tricks += 1;
+                    cout << players[0]->get_name() << " and " << players[2]->get_name() << " takes the trick" << endl;
+                }
+                if(playerwon % 2 == 1){
+                    team2tricks += 1;
+                    cout << players[1]->get_name() << " and " << players[3]->get_name() << " takes the trick" << endl;
+                }
+            }
 
+            if(team1tricks > team2tricks){
+                cout << players[0]->get_name() << " and " << players[2]->get_name() << " win the hand" << endl;
+                if(orderup){
+                    if(team1tricks == 3 || team1tricks == 4){
+                        team1score += 1;
+                    }
+                    if(team1tricks == 5){
+                        team1score += 2;
+                        cout << "march!" << endl;
+                    }
+                }
+                if(!orderup){
+                    team1score += 2;
+                    cout << "euchred!" << endl;
+                }
+            }
+            if(team2tricks > team1tricks){
+                cout << players[1]->get_name() << " and " << players[3]->get_name() << " win the hand" << endl;
+                if(orderup){
+                    if(team2tricks == 3 || team2tricks == 4){
+                        team2score += 1;
+                    }
+                    if(team2tricks == 5){
+                        team2score += 2;
+                        cout << "march!" << endl;
+                    }
+                }
+                if(!orderup){
+                    team2score += 2;
+                    cout << "euchred!" << endl;
+                }                  
+            }
+            cout << players[0]->get_name() << " and " << players[2]->get_name() << " have " << team1score << " points" << endl; 
+            cout << players[1]->get_name() << " and " << players[3]->get_name() << " have " << team1score << " points" << endl; 
+        }
 };
 
 int main(int argc, char **argv) {
