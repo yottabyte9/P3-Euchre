@@ -84,6 +84,7 @@ TEST(operators){
     ASSERT_TRUE( Card_less(c3, c1, trump) );
     ASSERT_FALSE( Card_less(c5, c4, trump) );
     ASSERT_TRUE( Card_less(c6, c7, trump) );
+    ASSERT_TRUE( Card_less(c7, c2, trump) ); 
 
     Card led1 = Card(Card::RANK_NINE, Card::SUIT_CLUBS);
     Card led2 = Card(Card::RANK_JACK, Card::SUIT_DIAMONDS);
@@ -94,6 +95,8 @@ TEST(operators){
     ASSERT_TRUE( Card_less( c4, c7, led2, trump));
     ASSERT_TRUE( Card_less( c6, c4, led1, trump));
     ASSERT_TRUE( Card_less( c5, c4, led1, trump));
+    ASSERT_FALSE( Card_less( c2, c7, led1, trump)); 
+    ASSERT_TRUE( Card_less( c4, c7, led1, trump)); 
 }
 
 TEST(test_cardless) {
