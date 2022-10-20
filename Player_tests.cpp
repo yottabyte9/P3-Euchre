@@ -554,6 +554,22 @@ TEST(test_play_card_10) {
 
 TEST(test_play_card_11) {
     Player * alice = Player_factory("Alice", "Simple");
+    Card c1(Card::RANK_TEN, Card::SUIT_CLUBS);
+    Card c2(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c3(Card::RANK_NINE, Card::SUIT_CLUBS);
+
+    alice->add_card(c1);
+    alice->add_card(c2);
+    alice->add_card(c3);
+
+    Card consider11(Card::RANK_JACK, Card::SUIT_CLUBS);
+    Card correct11(Card::RANK_NINE, Card::SUIT_CLUBS);
+    ASSERT_EQUAL(alice->play_card(consider11, "Spades"), correct11);
+    delete alice;
+}
+
+TEST(test_play_card_12) {
+    Player * alice = Player_factory("Alice", "Simple");
     Card c1(Card::RANK_NINE, Card::SUIT_DIAMONDS);
     Card c2(Card::RANK_TEN, Card::SUIT_DIAMONDS);
     Card c3(Card::RANK_NINE, Card::SUIT_SPADES);
