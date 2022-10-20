@@ -27,15 +27,18 @@ class SimplePlayer: public Player{
         }
     }
 
-    bool make_trump(const Card &upcard, bool is_dealer, int round, std::string &order_up_suit) const {
+    bool make_trump(const Card &upcard, bool is_dealer, 
+    int round, std::string &order_up_suit) const {
 
         int num_suit_hand = 0;
         int next_num_suit_hand = 0;
         for(int i=0; i<cardsp.size(); i++){
-            if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit(upcard.get_suit()) == upcard.get_suit()){
+            if(cardsp[i].is_face_or_ace() && 
+            cardsp[i].get_suit(upcard.get_suit()) == upcard.get_suit()){
                 num_suit_hand += 1;
             }
-            if(cardsp[i].is_face_or_ace() && cardsp[i].get_suit() == Suit_next(upcard.get_suit())){
+            if(cardsp[i].is_face_or_ace() && 
+            cardsp[i].get_suit() == Suit_next(upcard.get_suit())){
                 next_num_suit_hand += 1;
             }
         }
@@ -136,10 +139,9 @@ class SimplePlayer: public Player{
         }
         else {
             for (int j = 0; j < cardsp.size(); j++) {
-                if (cardsp[j].get_suit(trump) == led_card.get_suit(trump)) {
-                    if (Card_less(cardsp[followIndex], cardsp[j], trump)) {
-                        followIndex = j;
-                    }
+                if ((cardsp[j].get_suit(trump) == led_card.get_suit(trump)) && 
+                (Card_less(cardsp[followIndex], cardsp[j], trump))) {
+                    followIndex = j;
                 }
             }
             Card tempcard = cardsp[followIndex];
@@ -168,13 +170,9 @@ class HumanPlayer: public Player{
             if(cardsh.size() < MAX_HAND_SIZE){
                 cardsh.push_back(c);
             }
+            std::sort(cardsh.begin(), cardsh.end());
         }
 
-        //REQUIRES round is 1 or 2
-        //MODIFIES order_up_suit
-        //EFFECTS If Player wishes to order up a trump suit then return true and
-        //  change order_up_suit to desired suit.  If Player wishes to pass, then do
-        //  not modify order_up_suit and return false.
         bool make_trump(const Card &upcard, bool is_dealer,
                                 int round, std::string &order_up_suit) const{
             print_hand();
@@ -201,12 +199,12 @@ class HumanPlayer: public Player{
             print_hand();
             cout << "Discard upcard: [-1]\n";
             cout << "Human player " << nameh << ", please select a card to discard:\n";
+            cout << endl;
             int discard_num;
             cin >> discard_num;
             if(discard_num != -1){
                 cardsh.erase(cardsh.begin() + discard_num);
                 cardsh.push_back(upcard);
-                std::sort(cardsh.begin(), cardsh.end());
             }
             std::sort(cardsh.begin(), cardsh.end());
         }
@@ -223,6 +221,7 @@ class HumanPlayer: public Player{
             Card tempcard = cardsh[play_num];
             cardsh.erase(cardsh.begin() + play_num);
             return tempcard;
+            std::sort(cardsh.begin(), cardsh.end());
         }
 
         //REQUIRES Player has at least one card, trump is a valid suit
@@ -230,24 +229,25 @@ class HumanPlayer: public Player{
         //  The card is removed from the player's hand.
         Card play_card(const Card &led_card, const std::string &trump){
             return lead_card(trump);
+            std::sort(cardsh.begin(), cardsh.end());
         }
 
         // Maximum number of cards in a player's hand
         static const int MAX_HAND_SIZE = 5;    
 };
     
-std::ostream & operator<<(std::ostream &os, const Player &p){
-    os << p.get_name();
-        return os;
-}
+        std::ostream & operator<<(std::ostream &os, const Player &p){
+            os << p.get_name();
+                return os;
+        }
 
-Player * Player_factory(const std::string &name, const std::string &strategy){
-        if(strategy == "Simple"){
-            return new SimplePlayer(name);
+        Player * Player_factory(const std::string &name, const std::string &strategy){
+                if(strategy == "Simple"){
+                    return new SimplePlayer(name);
+                }
+                if(strategy == "Human"){
+                    return new HumanPlayer(name);
+                }
+                assert(false);
+                return nullptr;
         }
-        if(strategy == "Human"){
-            return new HumanPlayer(name);
-        }
-        assert(false);
-        return nullptr;
-    }
