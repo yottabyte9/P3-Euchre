@@ -53,7 +53,6 @@ string Card::get_suit(const string &trump) const{
     return suit;
 }
 
-  //EFFECTS Returns true if card is a face card (Jack, Queen, King or Ace)
 bool Card::is_face_or_ace() const{
     if( rank == RANK_JACK || rank == RANK_QUEEN || 
     rank == RANK_KING || rank == RANK_ACE ){
@@ -72,8 +71,6 @@ bool Card::is_trump(const string &trump) const{
     return (get_suit(trump) == trump);
 }
 
-//EFFECTS Returns true if lhs is lower value than rhs.
-//  Does not consider trump.
 bool operator<(const Card &lhs, const Card &rhs){
     double ranknuml = 9.0;
     if(lhs.get_rank().compare(Card::RANK_ACE)==0){
@@ -138,26 +135,18 @@ bool operator<(const Card &lhs, const Card &rhs){
     return( ranknuml < ranknumr );
 }
 
-//EFFECTS Returns true if lhs is lower value than rhs or the same card as rhs.
-//  Does not consider trump.
 bool operator<=(const Card &lhs, const Card &rhs){
     return (lhs < rhs || lhs == rhs);
 }
 
-//EFFECTS Returns true if lhs is higher value than rhs.
-//  Does not consider trump.
 bool operator>(const Card &lhs, const Card &rhs){
     return !(lhs <= rhs);
 }
 
-//EFFECTS Returns true if lhs is higher value than rhs or the same card as rhs.
-//  Does not consider trump.
 bool operator>=(const Card &lhs, const Card &rhs) {
     return !(lhs < rhs);
 }
 
-//EFFECTS Returns true if lhs is same card as rhs.
-//  Does not consider trump.
 bool operator==(const Card &lhs, const Card &rhs) {
     if (lhs.get_rank() == rhs.get_rank()) {
         if (lhs.get_suit() == rhs.get_suit()) {
@@ -167,14 +156,10 @@ bool operator==(const Card &lhs, const Card &rhs) {
     return false;
 }
 
-//EFFECTS Returns true if lhs is not the same card as rhs.
-//  Does not consider trump.
 bool operator!=(const Card &lhs, const Card &rhs) {
     return !(lhs == rhs);
 }
 
-//REQUIRES suit is a valid suit
-//EFFECTS returns the next suit, which is the suit of the same color
 std::string Suit_next(const std::string &suit){
     if(suit.compare(Card::SUIT_DIAMONDS) == 0){
         return Card::SUIT_HEARTS;
@@ -188,15 +173,11 @@ std::string Suit_next(const std::string &suit){
     return Card::SUIT_CLUBS;
 }
 
-//EFFECTS Prints Card to stream, for example "Two of Spades"
 std::ostream & operator<<(std::ostream &os, const Card &card){
     os << card.get_rank() << " of " << card.get_suit();
     return os;
 }
 
-//REQUIRES trump is a valid suit
-//EFFECTS Returns true if a is lower value than b.  Uses trump to determine
-// order, as described in the spec.
 bool Card_less(const Card &a, const Card &b, const std::string &trump){
     if(a.is_trump(trump) && !b.is_trump(trump)){
         return false;
@@ -224,9 +205,6 @@ bool Card_less(const Card &a, const Card &b, const std::string &trump){
     return true;
 }
 
-//REQUIRES trump is a valid suit
-//EFFECTS Returns true if a is lower value than b.  Uses both the trump suit
-//  and the suit led to determine order, as described in the spec.
 bool Card_less(const Card &a, const Card &b, const Card &led_card,
                const std::string &trump){
     if(a.is_trump(trump) && b.is_trump(trump)){ // if they are both trumps
