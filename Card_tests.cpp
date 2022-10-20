@@ -99,7 +99,7 @@ TEST(operators){
     ASSERT_TRUE( Card_less( c4, c7, led1, trump)); 
 }
 
-TEST(test_cardless) {
+TEST(test_cardless) { // edge case
     string trump = Card::SUIT_SPADES; 
     Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
     Card c2(Card::RANK_NINE, Card::SUIT_CLUBS);
