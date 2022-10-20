@@ -6,8 +6,6 @@
 #include "Card.h"
 using namespace std;
 
-// add any necessary #include or using directives here
-
 // rank and suit names -- do not remove these
 constexpr const char* const Card::RANK_TWO;
 constexpr const char* const Card::RANK_THREE;
@@ -27,8 +25,6 @@ constexpr const char* const Card::SUIT_SPADES;
 constexpr const char* const Card::SUIT_HEARTS;
 constexpr const char* const Card::SUIT_CLUBS;
 constexpr const char* const Card::SUIT_DIAMONDS;
-
-// add your code below
 
 
 Card::Card(){
@@ -59,7 +55,8 @@ string Card::get_suit(const string &trump) const{
 
   //EFFECTS Returns true if card is a face card (Jack, Queen, King or Ace)
 bool Card::is_face_or_ace() const{
-    if( rank == RANK_JACK || rank == RANK_QUEEN || rank == RANK_KING || rank == RANK_ACE ){
+    if( rank == RANK_JACK || rank == RANK_QUEEN || 
+    rank == RANK_KING || rank == RANK_ACE ){
         return true;
     }
     return false;
@@ -241,13 +238,16 @@ bool Card_less(const Card &a, const Card &b, const Card &led_card,
     if(!a.is_trump(trump) && b.is_trump(trump)){ // if only b is trump
         return true;
     }
-    if(a.get_suit() == led_card.get_suit() && b.get_suit() == led_card.get_suit()){ // if both are led suit
+    if(a.get_suit(trump) == led_card.get_suit(trump) && 
+    b.get_suit() == led_card.get_suit()){ // if both are led suit
         return a<b;
     }
-    if(a.get_suit() == led_card.get_suit() && !(b.get_suit() == led_card.get_suit())){ // if a is led suit
+    if(a.get_suit(trump) == led_card.get_suit(trump) && 
+    !(b.get_suit() == led_card.get_suit())){ // if a is led suit
         return false;
     }
-    if(!(a.get_suit() == led_card.get_suit())&& b.get_suit() == led_card.get_suit()){ // if b is led suit
+    if(!(a.get_suit(trump) == led_card.get_suit(trump))&& 
+    b.get_suit() == led_card.get_suit()){ // if b is led suit
         return true;
     }
     return a<b;
