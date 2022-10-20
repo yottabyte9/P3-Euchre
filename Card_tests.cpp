@@ -13,8 +13,6 @@ TEST(test_card_ctor) {
     ASSERT_EQUAL(Card::SUIT_HEARTS, c.get_suit());
 }
 
-// Add more test cases here
-
 TEST(test_card_get_suit) {
     Card c(Card::RANK_JACK, Card::SUIT_HEARTS);
     string trump = Card::SUIT_DIAMONDS;
@@ -98,7 +96,13 @@ TEST(operators){
     ASSERT_TRUE( Card_less( c5, c4, led1, trump));
 }
 
-
+TEST(test_cardless) {
+    string trump = Card::SUIT_SPADES; 
+    Card c1(Card::RANK_QUEEN, Card::SUIT_DIAMONDS);
+    Card c2(Card::RANK_NINE, Card::SUIT_CLUBS);
+    Card led1(Card::RANK_JACK, Card::SUIT_CLUBS);
+    ASSERT_TRUE(Card_less(c2, c1, led1, trump));
+}
 
 TEST(suit_next) {
     string trump1 = Card::SUIT_DIAMONDS; 
@@ -106,9 +110,6 @@ TEST(suit_next) {
     Card c(Card::RANK_JACK, Card::SUIT_HEARTS);
     ASSERT_EQUAL(Suit_next(Card::SUIT_DIAMONDS), Card::SUIT_HEARTS);
     ASSERT_NOT_EQUAL(Suit_next(Card::SUIT_CLUBS), Card::SUIT_CLUBS);
-
 }
-
-
 
 TEST_MAIN()
