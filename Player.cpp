@@ -76,8 +76,6 @@ class SimplePlayer: public Player{
             }
         }
         cardsp.erase(cardsp.begin()+min_index);
-        for (int i = 0; i < 5; i++) {
-        }
     }
 
     Card lead_card(const std::string &trump){
