@@ -18,7 +18,7 @@ class Game {
             entry = inputs[0];
             string fileName = inputs[1];
             ifstream in(fileName);
-            Pack pack(in);
+            pack = Pack(in);
             players.push_back(Player_factory(inputs[4], inputs[5]));
             players.push_back(Player_factory(inputs[6], inputs[7]));
             players.push_back(Player_factory(inputs[8], inputs[9]));
